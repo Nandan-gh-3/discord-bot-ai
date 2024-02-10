@@ -84,6 +84,10 @@ async def say(ctx, *, message):
     async with ctx.channel.typing():
         await send_message_chunks(ctx.send, message)
 
+@bot.command(name='help')
+async def help(ctx):
+    await send_message_chunks(ctx.send, 'monke help')
+
 
 @bot.event
 async def on_guild_join(guild):
