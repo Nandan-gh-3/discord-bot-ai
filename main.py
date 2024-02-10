@@ -97,7 +97,7 @@ def load_guild_emojis():
         all_guild_emojis[guild.id] = emojis_data
 
     save_emojis_to_json()
-    logging.info(f'All guild emojis loaded to memory')
+    logging.info(f'All guild emojis loaded to memoryy')
 
 
 async def get_query_from_message(ctx):
