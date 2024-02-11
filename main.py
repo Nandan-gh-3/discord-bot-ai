@@ -93,8 +93,8 @@ async def spy(ctx, *, message):
 @bot.command(name='say')
 async def say(ctx, *, message):
     async with ctx.channel.typing():
-        await ctx.message.delete()
         await send_message_chunks(ctx.send, message)
+        await ctx.message.delete()
 
 @bot.command(name='show_emojis')
 async def show_emojis(ctx):
