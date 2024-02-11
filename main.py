@@ -60,7 +60,7 @@ async def on_message(ctx):
                         content = content.replace(f'<@{mention.id}>', f'@{mention}')
                         content = content.replace(f'<@!{mention.id}>', f'@{mention}')
                     if add_nl:
-                        message_list.append(f'\n{message.author.name}: {content}')
+                        message_list.append(f'\n\n{content}')
                         add_nl = False
                     else:
                         message_list.append(f'{message.author.name}: {content}')
