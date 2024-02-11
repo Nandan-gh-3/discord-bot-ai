@@ -29,13 +29,15 @@ bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 logging.basicConfig(level=logging.INFO)
 
 all_guild_emojis = {}
-spy_count = 0
+spy_count = 4
 
 # Event Handlers
 @bot.event
 async def on_ready():
     logging.info(f'Logged in as {bot.user.name}')
     load_guild_emojis()
+
+import re
 
 @bot.event
 async def on_message(ctx):
@@ -44,11 +46,47 @@ async def on_message(ctx):
 
     if bot.user.mentioned_in(ctx):
         async with ctx.channel.typing():
-            query = await get_query_from_message(ctx)
-            h = await get_last_messages(ctx.channel, spy_count)
-            response = generate_gemini_response(query, emojis=all_guild_emojis[ctx.guild.id], h=h)
-            await send_message_chunks(ctx.reply, response)
+            if spy_count > 0:
+                history = ctx.channel.history(limit=spy_count)
+                message_list = []
+                add_nl = True
+                async for message in history:
+                    # Replace mentions with usernames
+                    content = message.content
+                    mentions = message.mentions
+                    # if its last message in the history we need to add \n to the end and remove the mention from the content and add it to the list
+                    # write code below
+                    for mention in mentions:
+                        content = content.replace(f'<@{mention.id}>', f'@{mention}')
+                        content = content.replace(f'<@!{mention.id}>', f'@{mention}')
+                    if add_nl:
+                        message_list.append(f'\n{content}')
+                        add_nl = False
+                    else:
+                        message_list.append(f'{message.author.name}: {content}')
+                
+                # Reverse the order of messages
+                message_list.reverse()
+
+                # Build the conversation string
+                convo_string = '\n'.join(message_list)
+                # print("\n" + convo_string)
+                response = generate_gemini_response(convo_string, all_guild_emojis[ctx.guild.id])
+                await send_message_chunks(ctx.reply, response)
+            else:
+                # Replace mentions with usernames in the message
+                content = ctx.content
+                mentions = ctx.mentions
+                for mention in mentions:
+                    content = content.replace(f'<@{mention.id}>', f'@{mention}')
+                    content = content.replace(f'<@!{mention.id}>', f'@{mention}')
+                print(content)
+                response = generate_gemini_response(content, all_guild_emojis[ctx.guild.id])
+                await send_message_chunks(ctx.reply, response)
+
+            # await send_message_chunks(ctx.reply, response)
     await bot.process_commands(ctx)
+
 
 @bot.event
 async def on_raw_reaction_add(payload):
@@ -113,54 +151,6 @@ async def on_guild_join(guild):
     load_guild_emojis()
 
 # Utility Functions
-async def get_last_messages(channel, count):
-    h = []
-    previous_role = None
-    last_added_role = None
-    async for message in channel.history(limit=count):
-        current_role = get_user_role(message.author)
-        if previous_role != current_role:
-            h.append({
-                "role": current_role,
-                "parts": [f"{(message.author.global_name + ' : ') if message.author.global_name is not None else '' }" + message.content]
-            })
-            last_added_role = current_role
-        else:
-            alternating_role = "user" if last_added_role != "user" else "model"
-            h.append({
-                "role": alternating_role,
-                "parts": ['']
-            })
-            h.append({
-                "role": current_role,
-                "parts": [f"{(message.author.global_name + ' : ') if message.author.global_name is not None else '' }" + message.content]
-            })
-        
-        previous_role = current_role
-    h.reverse()
-    return h
-
-def get_user_role(author):
-    if isinstance(author, discord.Member):
-        roles = author.roles
-        highest_role = max(roles, key=lambda role: role.position)
-        if highest_role.name == "Monke":
-            return "model"
-        else:
-            return highest_role.name
-    else:
-        return "user"
-
-async def get_query_from_message(ctx):
-    if ctx.reference:
-        if ctx.content.find(f"<@{bot.user.id}>") == -1:
-            return ""
-        referenced_message = await ctx.channel.fetch_message(ctx.reference.message_id)
-        query = referenced_message.content.replace(f'<@{bot.user.id}>', '').strip() + '\n' + ctx.content.replace(
-            f'<@{bot.user.id}>', '').strip()
-    else:
-        query = ctx.content.replace(f'<@{bot.user.id}>', '').strip()
-    return query
 
 def load_guild_emojis():
     for guild in bot.guilds:

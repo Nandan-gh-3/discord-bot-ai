@@ -39,17 +39,19 @@ safety_settings = [
 
 model = genai.GenerativeModel(model_name="gemini-pro", generation_config=generation_config, safety_settings=safety_settings)
 
-def generate_gemini_response(prompt, emojis, h=[]):
-    logging.info("\033[38;5;191mPrompt: \n"  + prompt + "\033[0m\n") 
-    if(h != []):
-        if(h[0].get("role") == "model"):
-            h.pop(0)
-        if(h[-1].get("role") == "user"):
-            h.pop(-1)
+def generate_gemini_response(prompt, emojis):
     history=[
         {
             "role": "user",
-            "parts": ["you must respond in short like a funny monke, but if i say please, respond normally."]
+            "parts": ["you are in a discord server and your username is MONKE#6120"]
+        },
+        {
+            "role": "model",
+            "parts": ["ok."]
+        },
+        {
+            "role": "user",
+            "parts": ["you must respond in short, like a funny monke, but if i say please, respond normally."]
         },
         {
             "role": "model",
@@ -87,8 +89,9 @@ def generate_gemini_response(prompt, emojis, h=[]):
             "role": "model",
             "parts": ["ok."]
         }
-    ] + h
-    print(history)
+    ]
+    logging.info("\033[38;5;99mHistory: \n" + json.dumps(history) + "\033[0m\n")
+    logging.info("\033[38;5;191mPrompt: \n"  + prompt + "\033[0m\n") 
     convo = model.start_chat(history=history)
     convo.send_message(prompt)
     # logging.info(convo.history)
