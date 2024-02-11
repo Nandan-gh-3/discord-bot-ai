@@ -8,7 +8,7 @@ import json
 import logging
 
 # Constants
-PREFIX = 'monke'
+PREFIX = 'monke '
 DELETE_EMOJI = '❌'
 
 load_dotenv()
@@ -40,8 +40,6 @@ async def on_ready():
 @bot.event
 async def on_message(ctx):
     if ctx.author == bot.user:
-        if ctx.content.startswith(PREFIX):
-            await bot.process_commands(ctx)
         return
 
     if bot.user.mentioned_in(ctx):
@@ -50,6 +48,7 @@ async def on_message(ctx):
             h = await get_last_messages(ctx.channel, spy_count)
             response = generate_gemini_response(query, emojis=all_guild_emojis[ctx.guild.id], h=h)
             await send_message_chunks(ctx.reply, response)
+    await bot.process_commands(ctx)
 
 @bot.event
 async def on_raw_reaction_add(payload):
@@ -93,8 +92,8 @@ async def spy(ctx, *, message):
 
 @bot.command(name='say')
 async def say(ctx, *, message):
-    print(message)
     async with ctx.channel.typing():
+        await ctx.message.delete()
         await send_message_chunks(ctx.send, message)
 
 @bot.command(name='show_emojis')
