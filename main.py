@@ -84,9 +84,22 @@ async def say(ctx, *, message):
     async with ctx.channel.typing():
         await send_message_chunks(ctx.send, message)
 
-@bot.command(name='help')
-async def help(ctx):
-    await send_message_chunks(ctx.send, 'monke help')
+@bot.command(name='spy')
+async def spy(ctx, *, message):
+    try:
+        # Convert the message to an array and take the first element
+        message_array = message.split()
+        if message_array:
+            message_number = int(message_array[0])
+            if 0 < message_number <= 100:
+                await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f"{message_number} messages"))
+            elif message_number == 0:
+                await bot.change_presence(activity=None)
+        else:
+            await ctx.send("please use proper format: `monke spy [number of messages]`")
+    except Exception as e:
+        logging.error(e)
+
 
 
 @bot.event
@@ -101,7 +114,7 @@ def load_guild_emojis():
         all_guild_emojis[guild.id] = emojis_data
 
     save_emojis_to_json()
-    logging.info(f'All guild emojis loaded to memoryy')
+    logging.info(f'All guild emojis loaded to memory')
 
 
 async def get_query_from_message(ctx):
